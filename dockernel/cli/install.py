@@ -1,3 +1,4 @@
+import secrets
 import platform
 import docker
 from typing import List
@@ -56,7 +57,7 @@ def generate_kernelspec_argv(image_name: str, system_type: str) -> List[str]:
 def image_digest(docker_client: docker.client.DockerClient,
                  image_name: str) -> str:
     image = docker_client.images.get(image_name)
-    return image.attrs['ContainerConfig']['Hostname']
+    return image.attrs['ContainerConfig']['Hostname'] or secrets.token_hex(8)
 
 
 def install(args: Namespace) -> int:
