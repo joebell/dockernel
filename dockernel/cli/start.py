@@ -64,6 +64,9 @@ def start(parsed_args: Namespace) -> int:
         CONTAINER_CONNECTION_SPEC_ENV_VAR: CONTAINER_CONNECTION_SPEC_PATH
     }
 
+    # ADDED FOR GPU SUPPORT
+    device_requests = [docker.types.DeviceRequest(count=-1, capabilities=[['gpu']])]
+
     # TODO: parametrize possible mounts
     # TODO: log stdout and stderr
     # TODO: use detached=True?
@@ -75,7 +78,8 @@ def start(parsed_args: Namespace) -> int:
         network_mode='bridge',
         ports=port_mapping,
         stdout=True,
-        stderr=True
+        stderr=True,
+        device_requests=device_requests
     )
 
     # TODO: bare numbered exit statusses seem bad
