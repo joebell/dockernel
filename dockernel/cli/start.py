@@ -50,10 +50,23 @@ def start(parsed_args: Namespace) -> int:
     port_mapping = {connection[k]: connection[k] for k in connection if "_port" in k}
 
     # TODO: parametrize connection spec file bind path
+    # 
+    # This won't work for DooD configurations, need to specify the source file with a path that the host can view. For this configuration /home is mounted from the volume notebook-homedirs
+#    connection_file_mount = docker.types.Mount(
+#        target=CONTAINER_CONNECTION_SPEC_PATH,
+#        source=str(connection_file.absolute()),
+#        type='bind',
+#        # XXX: some kernels still open connection spec in write mode
+#        # (I'm looking at you, IPython), even though it's not being written
+#        # into.
+#        read_only=False
+#    )
+
+    print('Connection file: %s' % connection_file)
     connection_file_mount = docker.types.Mount(
         target=CONTAINER_CONNECTION_SPEC_PATH,
         source=str(connection_file.absolute()),
-        type='bind',
+        type='volume',
         # XXX: some kernels still open connection spec in write mode
         # (I'm looking at you, IPython), even though it's not being written
         # into.
