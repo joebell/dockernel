@@ -1,4 +1,4 @@
-import json
+import json, os
 from argparse import Namespace
 from pathlib import Path
 
@@ -101,6 +101,8 @@ def start(parsed_args: Namespace) -> int:
         ports=port_mapping,
         stdout=True,
         stderr=True,
+        userns_mode='host',
+        user=os.getenv('USER'),
         device_requests=device_requests
     )
 
