@@ -92,6 +92,9 @@ def start(parsed_args: Namespace) -> int:
     # TODO: parametrize possible mounts
     # TODO: log stdout and stderr
     # TODO: use detached=True?
+    user = os.getenv('USER')
+    print('User: %s' % user)
+    #    userns_mode='host',
     containers.run(
         image_name,
         auto_remove=True,
@@ -101,7 +104,6 @@ def start(parsed_args: Namespace) -> int:
         ports=port_mapping,
         stdout=True,
         stderr=True,
-        userns_mode='host',
         user=os.getenv('USER'),
         device_requests=device_requests
     )
