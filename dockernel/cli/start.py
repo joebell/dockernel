@@ -51,7 +51,7 @@ def start(parsed_args: Namespace) -> int:
 
     # TODO: parametrize connection spec file bind path
     # 
-    # This won't work for DooD configurations, need to specify the source file with a path that the host can view. For this configuration /home is mounted from the volume notebook-homedirs
+    # This won't work for DooD configurations, need to specify the source file with a path that the host can view. 
 #    connection_file_mount = docker.types.Mount(
 #        target=CONTAINER_CONNECTION_SPEC_PATH,
 #        source=str(connection_file.absolute()),
@@ -61,11 +61,15 @@ def start(parsed_args: Namespace) -> int:
 #        # into.
 #        read_only=False
 #    )
+#    env_vars = {
+#        CONTAINER_CONNECTION_SPEC_ENV_VAR: CONTAINER_CONNECTION_SPEC_PATH
+#    }
 
+# Here instead of bind-mounting the connection_file into the image, we'll volume mount it from the volume that the host has. This also provides access to all the home directories in the image
     print('Connection file: %s' % connection_file)
     connection_file_mount = docker.types.Mount(
-        target=CONTAINER_CONNECTION_SPEC_PATH,
-        source=str(connection_file.absolute()),
+        target='/home',
+        source='notebook-homedirs',
         type='volume',
         # XXX: some kernels still open connection spec in write mode
         # (I'm looking at you, IPython), even though it's not being written
@@ -73,8 +77,9 @@ def start(parsed_args: Namespace) -> int:
         read_only=False
     )
 
+    # The CONTAINER_CONNECTION_SPEC_PATH will need to be adjusted too, but it should have the same path in the outer docker as in the inner docker
     env_vars = {
-        CONTAINER_CONNECTION_SPEC_ENV_VAR: CONTAINER_CONNECTION_SPEC_PATH
+        CONTAINER_CONNECTION_SPEC_ENV_VAR: str(connection_file.absolute())
     }
 
     # ADDED FOR GPU SUPPORT
