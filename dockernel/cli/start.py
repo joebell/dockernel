@@ -81,7 +81,8 @@ def start(parsed_args: Namespace) -> int:
         target='/etc',
         source='notebook-etc',
         type='volume',
-        read_only=True,
+        read_only=False,
+        # Nb: Setting /etc to read-only will cause gpu-based kernels to fail
     )
 
 
