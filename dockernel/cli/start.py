@@ -77,6 +77,13 @@ def start(parsed_args: Namespace) -> int:
         # into.
         read_only=False
     )
+    etc_file_mount = docker.types.Mount(
+        target='/etc',
+        source='notebook-etc',
+        type='volume',
+        read_only=True,
+    )
+
 
     # The CONTAINER_CONNECTION_SPEC_PATH will need to be adjusted too, but it should have the same path in the outer docker as in the inner docker
     env_vars = {
@@ -93,18 +100,18 @@ def start(parsed_args: Namespace) -> int:
     # TODO: log stdout and stderr
     # TODO: use detached=True?
     user = os.getenv('USER')
-    print('User: %s' % user)
-    #    userns_mode='host',
+    uid = os.getuid()
+    print('User: %s %d' % (user, uid))
     containers.run(
         image_name,
         auto_remove=True,
         environment=env_vars,
-        mounts=[connection_file_mount],
+        mounts=[connection_file_mount, etc_file_mount],
         network_mode='bridge',
         ports=port_mapping,
         stdout=True,
         stderr=True,
-        user=os.getenv('USER'),
+        user=uid,
         device_requests=device_requests
     )
 
