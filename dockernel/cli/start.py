@@ -83,6 +83,8 @@ def start(parsed_args: Namespace) -> int:
         CONTAINER_CONNECTION_SPEC_ENV_VAR: str(connection_file.absolute())
     }
 
+    print('Enironment variables: %s' % env_vars)
+
     # ADDED FOR GPU SUPPORT
     device_requests = [docker.types.DeviceRequest(count=-1, capabilities=[['gpu']])]
 
