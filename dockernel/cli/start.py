@@ -114,6 +114,7 @@ def start(parsed_args: Namespace) -> int:
         user=uid,
         device_requests=device_requests
     )
+    print('After containers.run')
 
     # TODO: bare numbered exit statusses seem bad
     return 0
