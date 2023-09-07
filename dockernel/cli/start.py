@@ -66,8 +66,6 @@ def start(parsed_args: Namespace) -> int:
 #    }
 
 # Here instead of bind-mounting the connection_file into the image, we'll volume mount it from the volume that the host has. This also provides access to all the home directories in the image
-    print('Connection file: %s' % connection_file.absolute())
-    print('CONTAINER_CONNECTION_SPEC_PATH: %s' % CONTAINER_CONNECTION_SPEC_PATH)
     connection_file_mount = docker.types.Mount(
         target='/home',
         source='notebook-homedirs',
@@ -91,9 +89,6 @@ def start(parsed_args: Namespace) -> int:
         CONTAINER_CONNECTION_SPEC_ENV_VAR: str(connection_file.absolute())
     }
 
-    print('Environment variables: %s' % env_vars)
-    print('Ports: %s' % port_mapping)
-
     # ADDED FOR GPU SUPPORT
     device_requests = [docker.types.DeviceRequest(count=-1, capabilities=[['gpu']])]
 
@@ -102,7 +97,6 @@ def start(parsed_args: Namespace) -> int:
     # TODO: use detached=True?
     user = os.getenv('USER')
     uid = os.getuid()
-    print('User: %s %d' % (user, uid))
     containers.run(
         image_name,
         auto_remove=True,
@@ -115,7 +109,6 @@ def start(parsed_args: Namespace) -> int:
         user=uid,
         device_requests=device_requests
     )
-    print('After containers.run')
 
     # TODO: bare numbered exit statusses seem bad
     return 0
