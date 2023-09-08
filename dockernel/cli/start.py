@@ -1,4 +1,4 @@
-import json, os
+import json, os, subprocess
 from argparse import Namespace
 from pathlib import Path
 
@@ -97,10 +97,10 @@ def start(parsed_args: Namespace) -> int:
     # TODO: use detached=True?
     user = os.getenv('USER')
     uid = os.getuid()
-    groups = subprocess.check_output(["id", "-G", "user"], \
+    groups = subprocess.check_output(["id", "-G", user], \
              universal_newlines=True)
     # Split the output into a list of numeric group IDs
-    group_ids = list(map(int, groups_output.strip().split()))
+    group_ids = list(map(int, groups.strip().split()))
     print('**** Group IDs ****')
     print(group_ids)
     containers.run(
