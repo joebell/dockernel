@@ -97,6 +97,12 @@ def start(parsed_args: Namespace) -> int:
     # TODO: use detached=True?
     user = os.getenv('USER')
     uid = os.getuid()
+    groups = subprocess.check_output(["id", "-G", "user"], \
+             universal_newlines=True)
+    # Split the output into a list of numeric group IDs
+    group_ids = list(map(int, groups_output.strip().split()))
+    print('**** Group IDs ****')
+    print(group_ids)
     containers.run(
         image_name,
         auto_remove=True,
@@ -107,6 +113,7 @@ def start(parsed_args: Namespace) -> int:
         stdout=True,
         stderr=True,
         user=uid,
+        group_add=group_ids,
         device_requests=device_requests
     )
 
