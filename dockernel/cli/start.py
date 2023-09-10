@@ -100,13 +100,14 @@ def start(parsed_args: Namespace) -> int:
     group_ids = os.getgroups()
     print('**** Group IDs ****')
     print(group_ids)
+
+    # ports=port_mapping,
     containers.run(
         image_name,
         auto_remove=True,
         environment=env_vars,
         mounts=[connection_file_mount, etc_file_mount],
         network_mode='host',
-        ports=port_mapping,
         stdout=True,
         stderr=True,
         user=uid,
