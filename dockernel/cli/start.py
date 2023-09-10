@@ -105,7 +105,7 @@ def start(parsed_args: Namespace) -> int:
         auto_remove=True,
         environment=env_vars,
         mounts=[connection_file_mount, etc_file_mount],
-        network_mode='bridge',
+        network_mode='host',
         ports=port_mapping,
         stdout=True,
         stderr=True,
