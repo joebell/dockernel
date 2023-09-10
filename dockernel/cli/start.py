@@ -68,7 +68,7 @@ def start(parsed_args: Namespace) -> int:
 # Here instead of bind-mounting the connection_file into the image, we'll volume mount it from the volume that the host has. This also provides access to all the home directories in the image
     connection_file_mount = docker.types.Mount(
         target='/home',
-        source='notebook-homedirs',
+        source='labnotebook-homedirs',
         type='volume',
         # XXX: some kernels still open connection spec in write mode
         # (I'm looking at you, IPython), even though it's not being written
@@ -77,7 +77,7 @@ def start(parsed_args: Namespace) -> int:
     )
     etc_file_mount = docker.types.Mount(
         target='/etc',
-        source='notebook-etc',
+        source='labnotebook-etc',
         type='volume',
         read_only=False,
         # Nb: Setting /etc to read-only will cause gpu-based kernels to fail
