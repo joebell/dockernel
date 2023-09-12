@@ -110,9 +110,9 @@ def start(parsed_args: Namespace) -> int:
         network_mode='host',
         stdout=True,
         stderr=True,
-        user=uid,
-        group_add=group_ids,
-        device_requests=device_requests
+#        user=uid,
+#        group_add=group_ids,
+#        device_requests=device_requests
     )
 
     # TODO: bare numbered exit statusses seem bad
