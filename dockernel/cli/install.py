@@ -40,7 +40,8 @@ JUPYTER_CONNECTION_FILE_TEMPLATE = '{connection_file}'
 def python_argv(system_type: str) -> List[str]:
     """Return proper command-line vector for python interpreter"""
     if system_type == "Linux" or system_type == "Darwin":
-        argv = ['/usr/bin/env', 'python', '-m']
+        # Don't take env here; just get the python that's on the path
+        argv = ['python', '-m']
     elif system_type == "Windows":
         argv = ['python', '-m']
     else:
