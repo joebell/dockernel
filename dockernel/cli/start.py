@@ -84,7 +84,7 @@ def start(args: Namespace) -> int:
 
     # Setup the run user
     if args.user:
-        if args.user == -1:
+        if args.user == "-1":
             uid = os.getuid()
         else:
             uid = args.user
@@ -92,7 +92,7 @@ def start(args: Namespace) -> int:
 
     # Setup the groups
     if args.group_add:
-        if args.group_add == -1:
+        if args.group_add == "-1":
             group_ids = os.getgroups()
         else:
             group_ids = args.group_add
