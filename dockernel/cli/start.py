@@ -4,7 +4,7 @@ from pathlib import Path
 
 import docker
 
-from .main import subparsers, set_subcommand_func
+from .main import subparsers, set_subcommand_func, add_common_arguments
 
 arguments = subparsers.add_parser(
     __name__.split('.')[-1],
@@ -13,10 +13,9 @@ arguments = subparsers.add_parser(
 
 # TODO: add a note about how to pull / build an image
 # TODO: add a note about default images
-arguments.add_argument(
-    'image_name',
-    help="Name of the docker image to use."
-)
+
+
+add_common_arguments(arguments)
 
 # TODO: make this one optional
 # TODO: add a help note about it being put into environment variables
@@ -26,10 +25,7 @@ arguments.add_argument(
     help="The connection file to use."
 )
 
-
-CONTAINER_CONNECTION_SPEC_PATH = '/kernel-connection-spec.json'
 CONTAINER_CONNECTION_SPEC_ENV_VAR = 'DOCKERNEL_CONNECTION_FILE'
-
 
 def set_connection_ip(connection_file: Path, ip: str = '0.0.0.0'):
     """ Set/update ip field in connection file """
@@ -41,79 +37,79 @@ def set_connection_ip(connection_file: Path, ip: str = '0.0.0.0'):
     return connection
 
 
-def start(parsed_args: Namespace) -> int:
+def start(args: Namespace) -> int:
     containers = docker.from_env().containers
-    image_name = parsed_args.image_name
-    connection_file = Path(parsed_args.connection_file)
+    image_name = args.image_name
+    connection_file = Path(args.connection_file)
 
-    connection = set_connection_ip(connection_file, '0.0.0.0')
-    port_mapping = {connection[k]: connection[k] for k in connection if "_port" in k}
+    # Start building kwargs for the run command
+    kwargs = {
+        'image': image_name,
+        'auto_remove': True,
+        'stdout': True,
+        'stderr': True
+    }
 
-    # TODO: parametrize connection spec file bind path
-    # 
-    # This won't work for DooD configurations, need to specify the source file with a path that the host can view. 
-#    connection_file_mount = docker.types.Mount(
-#        target=CONTAINER_CONNECTION_SPEC_PATH,
-#        source=str(connection_file.absolute()),
-#        type='bind',
-#        # XXX: some kernels still open connection spec in write mode
-#        # (I'm looking at you, IPython), even though it's not being written
-#        # into.
-#        read_only=False
-#    )
-#    env_vars = {
-#        CONTAINER_CONNECTION_SPEC_ENV_VAR: CONTAINER_CONNECTION_SPEC_PATH
-#    }
-
-# Here instead of bind-mounting the connection_file into the image, we'll volume mount it from the volume that the host has. This also provides access to all the home directories in the image
-    connection_file_mount = docker.types.Mount(
-        target='/home',
-        source='labnotebook-homedirs',
-        type='volume',
-        # XXX: some kernels still open connection spec in write mode
-        # (I'm looking at you, IPython), even though it's not being written
-        # into.
-        read_only=False
-    )
-    etc_file_mount = docker.types.Mount(
-        target='/etc',
-        source='labnotebook-etc',
-        type='volume',
-        read_only=False,
-        # Nb: Setting /etc to read-only will cause gpu-based kernels to fail
-    )
-
-
-    # The CONTAINER_CONNECTION_SPEC_PATH will need to be adjusted too, but it should have the same path in the outer docker as in the inner docker
+    # Set environment variables with the connection file and user specified values
     env_vars = {
         CONTAINER_CONNECTION_SPEC_ENV_VAR: str(connection_file.absolute())
     }
+    if args.env:
+        for varname, value in args.env:
+            env_vars.update({varname: value})
+    kwargs.update({'environment': env_vars})
 
-    # ADDED FOR GPU SUPPORT
-    device_requests = [docker.types.DeviceRequest(count=-1, capabilities=[['gpu']])]
+    # Setup any volume mounts
+    if args.volume:
+        mounts = []
+        for source, target, writemode in args.volume:
+            if writemode == 'ro':
+                read_only=True
+            else:
+                read_only=False
+            mounts.append(docker.types.Mount(
+                source=source,
+                target=target,
+                type='volume',
+                read_only=read_only))
+        kwargs.update({'mounts': mounts})
 
-    # TODO: parametrize possible mounts
+    # Setup the network mode, bind the ports if we're in bind-mode
+    connection = set_connection_ip(connection_file, '0.0.0.0')
+    port_mapping = {connection[k]: connection[k] for k in connection if "_port" in k}
+    if args.network:
+        if args.network == 'bind':
+            kwargs.update({'ports': port_mapping})
+        kwargs.update({'network': args.network})
+
+    # Setup the run user
+    if args.user:
+        if args.user == -1:
+            uid = os.getuid()
+        else:
+            uid = args.user
+        kwargs.update({'user': uid})
+
+    # Setup the groups
+    if args.group_add:
+        if args.group_add == -1:
+            group_ids = os.getgroups()
+        else:
+            group_ids = agrs.group_add
+        kwargs.update({'group_add': group_ids})
+
+    # Request GPUs
+    if args.gpus:
+        if args.gpus == 'all':
+            device_requests = [docker.types.DeviceRequest(count=-1, capabilities=[['gpu']])]
+        else:
+            device_requests = [docker.types.DeviceRequest(device_ids=[args.gpus], capabilities=[['gpu']])]
+        kwargs.update({'device_requests': device_requests})
+
     # TODO: log stdout and stderr
     # TODO: use detached=True?
-    user = os.getenv('USER')
-    uid = os.getuid()
-    group_ids = os.getgroups()
-    print('**** Group IDs ****')
-    print(group_ids)
-
-    # ports=port_mapping,
-    containers.run(
-        image_name,
-        auto_remove=True,
-        environment=env_vars,
-        mounts=[connection_file_mount, etc_file_mount],
-        network_mode='host',
-        stdout=True,
-        stderr=True,
-        user=uid,
-        group_add=group_ids,
-        device_requests=device_requests
-    )
+    # Run the container
+    containers.run(**kwargs)
 
     # TODO: bare numbered exit statusses seem bad
     return 0

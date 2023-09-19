@@ -2,8 +2,9 @@ import secrets
 import platform
 import docker
 from typing import List
+import argparse
 from argparse import Namespace
-from .main import subparsers, set_subcommand_func
+from .main import subparsers, set_subcommand_func, add_common_arguments
 from ..kernelspec import (Kernelspec, InterruptMode, user_kernelspec_store,
                           ensure_kernelspec_store_exists, kernelspec_dir,
                           install_kernelspec)
@@ -12,10 +13,6 @@ from ..kernelspec import (Kernelspec, InterruptMode, user_kernelspec_store,
 arguments = subparsers.add_parser(
     __name__.split('.')[-1],
     help="Install dockerized kernel image into Jupyter."
-)
-arguments.add_argument(
-    'image_name',
-    help="Name of the docker image to use."
 )
 arguments.add_argument(
     '--name',
@@ -33,6 +30,9 @@ arguments.add_argument(
     default=''
 )
 
+# Add common arguments used by both install and start
+add_common_arguments(arguments)
+
 
 JUPYTER_CONNECTION_FILE_TEMPLATE = '{connection_file}'
 
@@ -40,7 +40,7 @@ JUPYTER_CONNECTION_FILE_TEMPLATE = '{connection_file}'
 def python_argv(system_type: str) -> List[str]:
     """Return proper command-line vector for python interpreter"""
     if system_type == "Linux" or system_type == "Darwin":
-        argv = ['/opt/conda/envs/jupyterenv/bin/python', '-m']
+        argv = ['/usr/bin/env', 'python', '-m']
     elif system_type == "Windows":
         argv = ['python', '-m']
     else:
@@ -48,9 +48,31 @@ def python_argv(system_type: str) -> List[str]:
     return argv
 
 
-def generate_kernelspec_argv(image_name: str, system_type: str) -> List[str]:
-    dockernel_argv = ['dockernel', 'start',
-                      image_name, JUPYTER_CONNECTION_FILE_TEMPLATE]
+#def generate_kernelspec_argv(image_name: str, system_type: str) -> List[str]:
+def generate_kernelspec_argv(args: Namespace, system_type: str) -> List[str]:
+    dockernel_argv = ['dockernel', 'start']
+    if args.env:
+        for varname, value in args.env:
+            dockernel_argv.append("-e")
+            dockernel_argv.append(f"{varname}={value}")
+    if args.volume:
+        for source, destination, writemode in args.volume:
+            dockernel_argv.append("-v")
+            dockernel_argv.append(f"{source}:{destination}:{writemode}")
+    if args.gpus:
+        dockernel_argv.append("--gpus")
+        dockernel_argv.append(args.gpus)
+    if args.user:
+        dockernel_argv.append("--user")
+        dockernel_argv.append(args.user)
+    if args.group_add:
+        dockernel_argv.append("--group-add")
+        dockernel_argv.append(args.group_add)
+    if args.network:
+        dockernel_argv.append("--network")
+        dockernel_argv.append(args.network)
+    dockernel_argv.append(args.image_name)
+    dockernel_argv.append(JUPYTER_CONNECTION_FILE_TEMPLATE)
     return python_argv(system_type) + dockernel_argv
 
 
@@ -65,7 +87,7 @@ def install(args: Namespace) -> int:
     store_path = user_kernelspec_store(system_type)
     ensure_kernelspec_store_exists(store_path)
 
-    argv = generate_kernelspec_argv(args.image_name, system_type)
+    argv = generate_kernelspec_argv(args, system_type)
     display_name = args.image_name if args.name is None else args.name
     language = args.language
 
