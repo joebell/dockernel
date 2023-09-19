@@ -95,7 +95,7 @@ def start(args: Namespace) -> int:
         if args.group_add == -1:
             group_ids = os.getgroups()
         else:
-            group_ids = agrs.group_add
+            group_ids = args.group_add
         kwargs.update({'group_add': group_ids})
 
     # Request GPUs
