@@ -81,8 +81,7 @@ def image_digest(docker_client: docker.client.DockerClient,
                  image_name: str) -> str:
     image = docker_client.images.get(image_name)
 #    return image.attrs['ContainerConfig']['Hostname'] or secrets.token_hex(8)
-    print(image.tags)
-    return image.tags or secrets.token_hex(8)
+    return image_name or secrets.token_hex(8)
 
 
 def install(args: Namespace) -> int:

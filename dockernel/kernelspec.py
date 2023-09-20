@@ -111,9 +111,11 @@ def kernelspec_dir(kernelspec_store: Path, kernel_id: str) -> Path:
     Path
         Path object to the directory where kernelspec should be installed.
     """
+    # Sanitize the kernel_id if necessary
     allowed_characters = set(string.ascii_letters + string.digits + '_.-')
     if not set(kernel_id) <= allowed_characters:
-        raise ValueError("kernel_id contains forbidden characters")
+        kernel_id = ''.join(char if char in allowed_characters else '-' for char in kernel_id)
+        # raise ValueError("kernel_id contains forbidden characters")
 
     return kernelspec_store / kernel_id
 
