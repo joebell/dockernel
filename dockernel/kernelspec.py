@@ -162,8 +162,10 @@ def install_kernelspec(kernelspec_dir: Path, kernelspec: Kernelspec) -> None:
         present.
     """
     if kernelspec_dir.exists():
-        raise ValueError(f"kernelspec already exists: {kernelspec_dir}.")
-
-    kernelspec_dir.mkdir()
+        print('*** Overwriting previously installed kernelspec ***')
+#        raise ValueError(f"kernelspec already exists: {kernelspec_dir}.")
+        pass
+    else:
+        kernelspec_dir.mkdir()
     kernelspec_file = kernelspec_dir/KERNELSPEC_FILENAME
     kernelspec_file.write_text(kernelspec.json())
