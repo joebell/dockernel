@@ -47,7 +47,8 @@ def start(args: Namespace) -> int:
         'image': image_name,
         'auto_remove': True,
         'stdout': True,
-        'stderr': True
+        'stderr': True,
+        'init': True
     }
 
     # Set environment variables with the connection file and user specified values
