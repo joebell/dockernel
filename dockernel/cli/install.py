@@ -60,6 +60,10 @@ def generate_kernelspec_argv(args: Namespace, system_type: str) -> List[str]:
         for source, destination, writemode in args.volume:
             dockernel_argv.append("-v")
             dockernel_argv.append(f"{source}:{destination}:{writemode}")
+    if args.bind:
+        for source, destination, writemode in args.bind:
+            dockernel_argv.append("-b")
+            dockernel_argv.append(f"{source}:{destination}:{writemode}")
     if args.gpus:
         dockernel_argv.append("--gpus")
         dockernel_argv.append(args.gpus)

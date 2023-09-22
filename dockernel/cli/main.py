@@ -64,6 +64,12 @@ def add_common_arguments(arguments):
         default=None
     )
     arguments.add_argument(
+        '--bind', '-b',
+        metavar='source:destination', type=volume_arg, action='append',
+        help="Mount a bind-mount to the container. ",
+        default=None
+    )
+    arguments.add_argument(
         '--gpus',
         help="GPU devices to add to the container. ",
         default=None

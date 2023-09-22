@@ -60,9 +60,9 @@ def start(args: Namespace) -> int:
             env_vars.update({varname: value})
     kwargs.update({'environment': env_vars})
 
+    mounts = []
     # Setup any volume mounts
     if args.volume:
-        mounts = []
         for source, target, writemode in args.volume:
             if writemode == 'ro':
                 read_only=True
@@ -72,6 +72,19 @@ def start(args: Namespace) -> int:
                 source=source,
                 target=target,
                 type='volume',
+                read_only=read_only))
+        kwargs.update({'mounts': mounts})
+    # Setup any bind mounts
+    if args.bind:
+        for source, target, writemode in args.bind:
+            if writemode == 'ro':
+                read_only=True
+            else:
+                read_only=False
+            mounts.append(docker.types.Mount(
+                source=source,
+                target=target,
+                type='bind',
                 read_only=read_only))
         kwargs.update({'mounts': mounts})
 
